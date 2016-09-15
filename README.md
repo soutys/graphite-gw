@@ -25,8 +25,8 @@ Certs being used are from puppet here.
 ```
 curl -v --cert /var/lib/puppet/ssl/certs/some.host.name.pem \
         --key /var/lib/puppet/ssl/private_keys/some.host.name.pem \
-        --data-binary @data.txt
-        'https://some.graphite-gw.server/' \
+        --data-binary @data.txt \
+        'https://some.graphite-gw.server/'
 ```
 
 where data.txt might be something like this (metrics from pcp):
