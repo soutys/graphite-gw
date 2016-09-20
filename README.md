@@ -26,8 +26,7 @@ Certs being used are from puppet here.
 ```
 curl -v --cert /var/lib/puppet/ssl/certs/some.host.name.pem \
         --key /var/lib/puppet/ssl/private_keys/some.host.name.pem \
-        --data 'graphite_out=some.graphite.prefix.some_host_name.load.oneminute 4.02 1463739596'
-        -data-binary @data.txt \
+        --data 'graphite_out=some.graphite.prefix.some_host_name.load.oneminute 4.02 1463739596' \
         'https://some.graphite-gw.server/'
 ```
 
