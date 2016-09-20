@@ -1,0 +1,28 @@
+server {
+	listen 443 ssl default_server;
+
+	server_name _;
+
+        ssl_certificate          /etc/nginx/ssl/graphite-gw-cert.pem;
+        ssl_certificate_key      /etc/nginx/ssl/graphite-gw-private-key.pem;
+        ssl_client_certificate   /var/lib/puppet/ssl/certs/ca.pem;
+        ssl_verify_client        on;
+        ssl_crl                  /var/lib/puppet/ssl/crl.pem;
+        ssl_protocols            TLSv1 TLSv1.1 TLSv1.2;
+        ssl_ciphers              HIGH:!aNULL:!MD5;
+
+        client_max_body_size     100M;
+        client_body_buffer_size  100M;
+
+        # remember to comment it in production
+        lua_code_cache           off;
+	location / {
+                default_type    'text/plain';
+                set $graphite_gw_prefix "some.graphite.prefix."; # some prefix with dot at the end
+                set $graphite_address "<some ip address>";       # here goes ip address of graphite server
+                set $graphite_port "2003";                       # graphite text port
+                set $graphite_timeout "1000";                    # in seconds
+                set $log_graphite_out "1";                       # if nginx should log output of clients to error.log
+                content_by_lua_file '/etc/nginx/lua/graphite-gw.lua';
+	}
+}
