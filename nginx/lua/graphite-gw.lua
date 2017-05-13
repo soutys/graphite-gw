@@ -59,6 +59,44 @@ end
 ACLS = {}
 
 ----------------------------------
+-- gzipped payload processors
+----------------------------------
+-- source: https://gist.github.com/davidcaste/05b2f9461ebe4a3bb3fc
+
+ngx.ctx.max_chunk_size = tonumber(ngx.var.max_chunk_size)
+ngx.ctx.max_body_size = tonumber(ngx.var.max_body_size)
+
+function inflate_body(data)
+	local stream = require('zlib').inflate()
+	local buffer = ''
+	local chunk = ''
+
+	for index = 0, data:len(), ngx.ctx.max_chunk_size do
+		chunk = string.sub(data, index, index + ngx.ctx.max_chunk_size - 1)
+		local status, output, eof, bytes_in, bytes_out = pcall(stream, chunk)
+
+		if not status then
+			-- corrupted chunk
+			echo(537, 'Corrupted GZIP body')
+		end
+
+		if bytes_in == 0 and bytes_out == 0 then
+			-- body is not gzip compressed
+			echo(537, 'Invalid GZIP body')
+		end
+
+		buffer = buffer .. output
+
+		if bytes_out > ngx.ctx.max_body_size then
+			-- uncompressed body too large
+			echo(537, 'Uncompressed body too large')
+		end
+	end
+
+	return buffer
+end
+
+----------------------------------
 
 -- Get graphite_out POST argument value
 local function get_graphite_out()
@@ -72,6 +110,10 @@ local function get_graphite_out()
 
     if not graphite_out then
         echo(531, 'No graphite_out POST argument nor raw data')
+    end
+
+    if (ngx.var.http_content_encoding == 'gzip') then
+        graphite_out = inflate_body(graphite_out)
     end
 
     if ngx.var.log_graphite_out == '1' then
